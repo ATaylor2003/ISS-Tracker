@@ -213,11 +213,17 @@ def get_header() -> str:
     """
     if iss_data:
         header = iss_data[1]
+    if header:
+        header_info = header['header'][0]
+        creation_date = header_info.get('CREATION_DATE', 'N/A')
+        originator = header_info.get('ORIGINATOR', 'N/A')
+        
         output = "Header:\n"
-        output += f"{header}\n"
+        output += f"Creation Date: {creation_date}\n"
+        output += f"Originator: {originator}\n"
         return output
     else:
-        return "No ISS data available."
+        return "No header data available."
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0')
