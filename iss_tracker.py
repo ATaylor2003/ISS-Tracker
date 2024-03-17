@@ -1,16 +1,19 @@
 import requests
 import xmltodict
+import math
+import pytz
 from datetime import datetime
 import logging
 from typing import List, Dict, Any
 from flask import Flask, request
+from geopy.geocoders import Nominatim
 
 app = Flask(__name__)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-data_off = 2
+data_off = 3
 # Function to fetch ISS data from NASA's website and parse it into a list of dictionaries
 def fetch_iss_data() -> List[Dict[str, Any]]:
     """
@@ -37,11 +40,17 @@ def fetch_iss_data() -> List[Dict[str, Any]]:
         header = data_dict['ndm']['oem']['header']
         if not isinstance(header, list):
             header = [header]
+
+        metadata = data_dict['ndm']['oem']['body']['segment']['metadata']
+        if not isinstance(metadata, list):
+            metadata = [metadata]
         
         # Initialize the ISS data list
         iss_data = []
         iss_data.append({'comments': comments})
         iss_data.append({'header': header})
+        iss_data.append({'metadata': metadata})
+
 
         # Check if state_vectors is a list, and converts if not
         if not isinstance(state_vectors, list):
@@ -118,7 +127,7 @@ def get_epochs() -> str:
         state = state_data['state']
         output += f"Timestamp: {state['timestamp']}\n"
         output += print_position_velocity_data(state, indent='   ')
-    return str(limit)
+    return output
 
 # Route to return state vectors for a specific epoch
 @app.route('/epochs/<epoch>', methods=['GET'])
@@ -175,8 +184,8 @@ def get_nearest_epoch() -> str:
     Returns:
         str: String containing formatted epoch and speed data.
     """
-    now = datetime.now()
-    closest_state_data = min(iss_data[data_off:], key=lambda x: abs(datetime.strptime(x['state']['timestamp'], '%Y-%jT%H:%M:%S.%fZ') - now))
+    now = datetime.now(pytz.utc)
+    closest_state_data = min(iss_data[data_off:], key=lambda x: abs(datetime.strptime(x['state']['timestamp'], '%Y-%jT%H:%M:%S.%fZ').replace(tzinfo=pytz.utc) - now))
     state = closest_state_data['state']
     velocity = state['velocity']
     instantaneous_speed = (velocity['x_dot'] ** 2 + velocity['y_dot'] ** 2 + velocity['z_dot'] ** 2) ** 0.5
@@ -184,6 +193,25 @@ def get_nearest_epoch() -> str:
     output += f"Timestamp: {state['timestamp']}\n"
     output += print_position_velocity_data(state, indent='   ')
     output += f"Instantaneous Speed: {instantaneous_speed}\n"
+    position = state['position']
+    x = float(position['x'])
+    y = float(position['y'])
+    z = float(position['z'])
+    hrs = int(state['timestamp'][9:11])
+    mins = int(state['timestamp'][12:14])
+    lat = math.degrees(math.atan2(z, math.sqrt(x**2 + y**2))) 
+    alt = math.sqrt(x**2 + y**2 + z**2) - 6371
+    lon = math.degrees(math.atan2(y, x)) - ((hrs-12)+(mins/60))*(360/24) + 5
+    if lon > 180: lon = -180 + (lon - 180)
+    if lon < -180: lon = 180 + (lon + 180)    
+    geocoder = Nominatim(user_agent='iss_tracker')
+    location = geocoder.reverse((lat, lon), zoom=15, language='en')
+    if location is not None:
+        address = location.raw['address']
+    else:
+        #logger.warning['warning: No location data found. Check if over ocean.']
+        address = 'No location data obtained, likely over ocean.'
+    output += 'Latitude = ' + str(lat) + '\nLongitude = ' + str(lon) + '\nGeolocation = ' + str(address) + '\n'
     return output
 
 @app.route('/comment', methods=['GET'])
@@ -201,29 +229,85 @@ def get_comments() -> str:
             output += f"{comment}\n"
         return output
     else:
+        logger.error['error: could not find ISS data']
         return "No ISS data available."
     
 @app.route('/header', methods=['GET'])
 def get_header() -> str:
     """
-    Route to return comments from ISS data.
+    Route to return header from ISS data.
 
     Returns:
-        str: String containing comments.
+        str: String containing header elements.
     """
     if iss_data:
         header = iss_data[1]
     if header:
         header_info = header['header'][0]
-        creation_date = header_info.get('CREATION_DATE', 'N/A')
-        originator = header_info.get('ORIGINATOR', 'N/A')
-        
         output = "Header:\n"
-        output += f"Creation Date: {creation_date}\n"
-        output += f"Originator: {originator}\n"
+        output += f"Creation Date: {header_info.get('CREATION_DATE', 'N/A')}\n"
+        output += f"Originator: {header_info.get('ORIGINATOR', 'N/A')}\n"
         return output
     else:
+        logger.error['error: could not find ISS data']
         return "No header data available."
+    
+@app.route('/metadata', methods=['GET'])
+def get_metadata() -> str:
+    """
+    Route to return comments from ISS metadata.
+
+    Returns:
+        str: String containing metadata elements.
+    """
+    if iss_data:
+        metadata = iss_data[2]
+    if metadata:
+        metadata_info = metadata['metadata'][0]
+        output = "Metadata:\n"
+        output += f"Object Name: {metadata_info.get('OBJECT_NAME', 'N/A')}\n"
+        output += f"Object ID: {metadata_info.get('OBJECT_ID', 'N/A')}\n"   
+        output += f"Center Name: {metadata_info.get('CENTER_NAME', 'N/A')}\n"
+        output += f"Reference Frame: {metadata_info.get('REF_FRAME', 'N/A')}\n"
+        output += f"Time System: {metadata_info.get('TIME_SYSTEM', 'N/A')}\n"
+        output += f"Start Time: {metadata_info.get('START_TIME', 'N/A')}\n"
+        output += f"Stop Time: {metadata_info.get('STOP_TIME', 'N/A')}\n"
+        return output
+    else:
+        logger.error['error: could not find ISS data']  
+        return "No metadata available."
+    
+@app.route('/epochs/<epoch>/location', methods=['GET'])
+def get_location(epoch: str) -> str:
+    state_data = next((data for data in iss_data[data_off:] if data['state']['timestamp'] == epoch), None)
+    if state_data:
+        state = state_data['state']
+        position = state['position']
+        x = float(position['x'])
+        y = float(position['y'])
+        z = float(position['z'])
+        hrs = int(state['timestamp'][9:11])
+        mins = int(state['timestamp'][12:14])
+        lat = math.degrees(math.atan2(z, math.sqrt(x**2 + y**2))) 
+        alt = math.sqrt(x**2 + y**2 + z**2) - 6371
+        lon = math.degrees(math.atan2(y, x)) - ((hrs-12)+(mins/60))*(360/24) + 5
+        if lon > 180: lon = -180 + (lon - 180)
+        if lon < -180: lon = 180 + (lon + 180)    
+        geocoder = Nominatim(user_agent='iss_tracker')
+        location = geocoder.reverse((lat, lon), zoom=15, language='en')
+        if location is not None:
+            address = location.raw['address']
+        else:
+            #logger.warning['warning: No location data found. Check if over ocean.']
+            address = 'No location data obtained, likely over ocean.'
+
+        output = {
+                "latitude": lat,
+                "longitude": lon,
+                "geolocation": address,
+                "altitude": alt
+            }
+        return output
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0')
