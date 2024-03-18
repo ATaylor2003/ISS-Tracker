@@ -92,10 +92,10 @@ def print_position_velocity_data(state: Dict[str, Any], indent: str = '') -> str
         str: Formatted string containing position and velocity data.
     """
     output = ""
-    output += f"{indent}Position:\n"
+    output += f"{indent}Position (km):\n"
     for axis, value in state['position'].items():
         output += f"{indent}   {axis} = {value}\n"
-    output += f"{indent}Velocity:\n"
+    output += f"{indent}Velocity (km/s):\n"
     for axis, value in state['velocity'].items():
         output += f"{indent}   {axis} = {value}\n"
     return output
@@ -169,7 +169,7 @@ def get_instantaneous_speed(epoch: str) -> str:
         state = state_data['state']
         velocity = state['velocity']
         instantaneous_speed = (velocity['x_dot'] ** 2 + velocity['y_dot'] ** 2 + velocity['z_dot'] ** 2) ** 0.5
-        output = f"Instantaneous Speed: {instantaneous_speed}\n"
+        output = f"Instantaneous Speed (km/s): {instantaneous_speed}\n"
         return output
     else:
         logger.error({'error': 'State vector not found for the given epoch'})
@@ -189,10 +189,10 @@ def get_nearest_epoch() -> str:
     state = closest_state_data['state']
     velocity = state['velocity']
     instantaneous_speed = (velocity['x_dot'] ** 2 + velocity['y_dot'] ** 2 + velocity['z_dot'] ** 2) ** 0.5
-    output = "Closest Epoch:\n"
+    output = "Closest Epoch (UTC):\n"
     output += f"Timestamp: {state['timestamp']}\n"
-    output += print_position_velocity_data(state, indent='   ')
-    output += f"Instantaneous Speed: {instantaneous_speed}\n"
+    #output += print_position_velocity_data(state, indent='   ')
+    output += f"Instantaneous Speed (km/s): {instantaneous_speed}\n"
     position = state['position']
     x = float(position['x'])
     y = float(position['y'])
@@ -211,7 +211,7 @@ def get_nearest_epoch() -> str:
     else:
         #logger.warning['warning: No location data found. Check if over ocean.']
         address = 'No location data obtained, likely over ocean.'
-    output += 'Latitude = ' + str(lat) + '\nLongitude = ' + str(lon) + '\nGeolocation = ' + str(address) + '\n'
+    output += 'Altitude (km) = '+ str(alt)+'\nLatitude = ' + str(lat) + '\nLongitude = ' + str(lon) + '\nGeolocation = ' + str(address) + '\n'
     return output
 
 @app.route('/comment', methods=['GET'])
@@ -224,10 +224,10 @@ def get_comments() -> str:
     """
     if iss_data:
         comments = iss_data[0].get('comments', [])
-        output = "Comments:\n"
-        for comment in comments:
-            output += f"{comment}\n"
-        return output
+        #output = "Comments:\n"
+        #for comment in comments:
+        #    output += f"{comment}\n"
+        return comments
     else:
         logger.error['error: could not find ISS data']
         return "No ISS data available."
@@ -243,11 +243,11 @@ def get_header() -> str:
     if iss_data:
         header = iss_data[1]
     if header:
-        header_info = header['header'][0]
-        output = "Header:\n"
-        output += f"Creation Date: {header_info.get('CREATION_DATE', 'N/A')}\n"
-        output += f"Originator: {header_info.get('ORIGINATOR', 'N/A')}\n"
-        return output
+        #header_info = header['header'][0]
+        #output = "Header:\n"
+        #output += f"Creation Date: {header_info.get('CREATION_DATE', 'N/A')}\n"
+        #output += f"Originator: {header_info.get('ORIGINATOR', 'N/A')}\n"
+        return header
     else:
         logger.error['error: could not find ISS data']
         return "No header data available."
@@ -255,7 +255,7 @@ def get_header() -> str:
 @app.route('/metadata', methods=['GET'])
 def get_metadata() -> str:
     """
-    Route to return comments from ISS metadata.
+    Route to return comments from ISS data.
 
     Returns:
         str: String containing metadata elements.
@@ -263,22 +263,28 @@ def get_metadata() -> str:
     if iss_data:
         metadata = iss_data[2]
     if metadata:
-        metadata_info = metadata['metadata'][0]
-        output = "Metadata:\n"
-        output += f"Object Name: {metadata_info.get('OBJECT_NAME', 'N/A')}\n"
-        output += f"Object ID: {metadata_info.get('OBJECT_ID', 'N/A')}\n"   
-        output += f"Center Name: {metadata_info.get('CENTER_NAME', 'N/A')}\n"
-        output += f"Reference Frame: {metadata_info.get('REF_FRAME', 'N/A')}\n"
-        output += f"Time System: {metadata_info.get('TIME_SYSTEM', 'N/A')}\n"
-        output += f"Start Time: {metadata_info.get('START_TIME', 'N/A')}\n"
-        output += f"Stop Time: {metadata_info.get('STOP_TIME', 'N/A')}\n"
-        return output
+        #metadata_info = metadata['metadata'][0]
+        #output = "Metadata:\n"
+        #output += f"Object Name: {metadata_info.get('OBJECT_NAME', 'N/A')}\n"
+        #output += f"Object ID: {metadata_info.get('OBJECT_ID', 'N/A')}\n"   
+        #output += f"Center Name: {metadata_info.get('CENTER_NAME', 'N/A')}\n"
+        #output += f"Reference Frame: {metadata_info.get('REF_FRAME', 'N/A')}\n"
+        #output += f"Time System: {metadata_info.get('TIME_SYSTEM', 'N/A')}\n"
+        #output += f"Start Time: {metadata_info.get('START_TIME', 'N/A')}\n"
+        #output += f"Stop Time: {metadata_info.get('STOP_TIME', 'N/A')}\n"
+        return metadata
     else:
         logger.error['error: could not find ISS data']  
         return "No metadata available."
     
 @app.route('/epochs/<epoch>/location', methods=['GET'])
 def get_location(epoch: str) -> str:
+    """
+    Route to return latitude, longitude, altitude, and geoposition for a specific Epoch
+
+    Returns:
+        str: String containing altitude, geoposition, latitude, and longitude.
+    """
     state_data = next((data for data in iss_data[data_off:] if data['state']['timestamp'] == epoch), None)
     if state_data:
         state = state_data['state']
