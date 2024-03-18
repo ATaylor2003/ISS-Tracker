@@ -1,7 +1,7 @@
 # ISS Tracker
 
 ## Overview
-The ISS Tracker project provides a flask app for retrieving, processing, and analyzing International Space Station (ISS) trajectory data and current location. The primary script, iss_tracker.py, fetches ISS data from NASA's website [1], processes it into a structured format, and outputs timestamps, state vectors, speed, and/or geolocation depending on the URL used. Additionally, the project includes a unit testing script, test_iss_tracker.py, for testing the functionality of each individual function in the primary script. This allows for one to easily gain access to Epoch data in certain timeframes and can aid with identifying the positional history of the space station along with its current position, which can help with performing station observation.
+The ISS Tracker project provides a flask app for retrieving, processing, and analyzing International Space Station (ISS) trajectory data and current location. The primary script, iss_tracker.py, fetches ISS data from [NASA's Spot The Station][1], processes it into a structured format, and outputs timestamps, state vectors, speed, and/or geolocation depending on the URL used. Additionally, the project includes a unit testing script, test_iss_tracker.py, for testing the functionality of each individual function in the primary script. This allows for one to easily gain access to Epoch data in certain timeframes and can aid with identifying the positional history of the space station along with its current position, which can help with performing station observation.
 
 ## Folder Contents
 
@@ -26,7 +26,7 @@ Ensure that you are in the directory with your copied files/cloned repo.
 
 ### Obtaining Data
 
-Data is automatically retrieved by the script from [1], which requires an internet connection.
+Data is automatically retrieved by the script from [NASA's Spot The Station][1], which requires an internet connection.
 
 ### Running the Code
 
@@ -35,9 +35,9 @@ Data is automatically retrieved by the script from [1], which requires an intern
     ```bash
     [user-vm]/ISS-Tracker$ curl localhost:5000/[command]
 These are the commands:
-- /comment: Returns the 'comment' list object from the ISS data provided by [1].
-- /header: Returns the 'header' dictionary object from the ISS data provided by [1].
-- /metadata: Returns the 'metadata' dictionary object from the ISS data provided by [1].
+- /comment: Returns the 'comment' list object from the ISS data provided by the ISS data.
+- /header: Returns the 'header' dictionary object from the ISS data provided by ISS data.
+- /metadata: Returns the 'metadata' dictionary object from the ISS data provided by ISS data.
 - /epochs: Return entire data set
 - /epochs?limit=int&offset=int: Return modified Epoch list using query parameters. Ensure the URL is in single or double quotes when you use multiple parameters.
 - /epochs/&lt;epoch&gt;: Return state vectors for a specific Epoch specified by a timestamp
@@ -72,4 +72,4 @@ Ensure that you are either in the correct directory or that you specify the dire
 
 
 ### References
-[1]: https://spotthestation.nasa.gov/trajectory_data.cfm
+1. NASA's Spot the Station [https://spotthestation.nasa.gov/trajectory_data.cfm]
