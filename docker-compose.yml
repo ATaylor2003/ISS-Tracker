@@ -6,8 +6,8 @@ services:
         build:
             context: ./
             dockerfile: ./Dockerfile
-        image: aidanrt03/iss_tracker:1.0
-        container_name: iss_tracker-app
+        image: aidanrt03/iss_tracker_geo:1.0
+        container_name: iss_tracker_geo-app
         ports:
             - "5000:5000"
 ...
