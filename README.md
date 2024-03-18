@@ -59,7 +59,7 @@ Ensure that you are either in the correct directory or that you specify the dire
 - location provides altitude in km as well as latitude and longitude of the ISS relative to its position above Earth's surface. Additionally, it provides geopositional data based on wherever it is flying over at the specified timestamp that may include country name, city information, county information, etc depending on the location. If it is over the ocean, no location will be specified.
 - the now route provides data (instantaneous speed, latitude, longitude, altitude, and geoposition) based on the Epoch nearest in time (UTC). The ISS data is provided in four minute increments, so minor differences are likely.
 
-Example:
+- Example:
    ```bash
     [user-vm]/ISS-Tracker$ curl localhost:5000/now
     Closest Epoch (UTC):
@@ -69,6 +69,7 @@ Example:
     Latitude = 49.112070566067544
     Longitude = 105.12869747883002
     Geolocation = {'county': 'Baruunburen', 'state': 'Selenge', 'ISO3166-2-lvl4': 'MN-049', 'country': 'Mongolia', 'country_code': 'mn'}
-    
+
+
 ### References
 [1]: https://spotthestation.nasa.gov/trajectory_data.cfm
