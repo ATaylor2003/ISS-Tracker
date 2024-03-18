@@ -69,7 +69,5 @@ Example:
     Latitude = 49.112070566067544
     Longitude = 105.12869747883002
     Geolocation = {'county': 'Baruunburen', 'state': 'Selenge', 'ISO3166-2-lvl4': 'MN-049', 'country': 'Mongolia', 'country_code': 'mn'}
-
-
 ### References
 [1]: https://spotthestation.nasa.gov/trajectory_data.cfm
