@@ -1,4 +1,4 @@
-# International Space Station Epoch Tracker
+# International Space Station Tracker App
 
 ## Overview
 The ISS Tracker project provides a flask app for retrieving, processing, and analyzing International Space Station (ISS) trajectory data and current location. The primary script, iss_tracker.py, fetches ISS data from [NASA's Spot The Station][1], processes it into a structured format, and outputs timestamps, state vectors, speed, and/or geolocation depending on the URL used. Additionally, the project includes a unit testing script, test_iss_tracker.py, for testing the functionality of each individual function in the primary script. This allows for one to easily gain access to Epoch data in certain timeframes and can aid with identifying the positional history of the space station along with its current position, which can help with performing station observation.
@@ -8,9 +8,10 @@ The ISS Tracker project provides a flask app for retrieving, processing, and ana
 - **iss_tracker.py**: Python3 app script for fetching ISS data, processing it, performing calculations, and producing outputs depending on the given URL route.
 - **test_iss_tracker.py**: Unit testing script containing test cases for each route in iss_tracker.py.
 - **README.md**: Instructions and information about the project.
-- **Dockerfile**: Dockerfile for building the Docker image containing the app scripts and dependencies.
+- **Dockerfile**: Dockerfile for building the Docker image containing the app scripts and pulls dependencies from requirements.txt.
 - **requirements.txt**: Dockerfile dependency, contains required modules that need to be installed when creating the image.
 - **dockerfile-compose.yml**: Docker composition script used to simplify the process of spinning up the image.
+- **diagram.pdf**: Software diagram for the ISS app.
 
 ## Instructions
 
@@ -38,9 +39,9 @@ These are the commands:
 - /comment: Returns the 'comment' list object from the ISS data provided by the ISS data.
 - /header: Returns the 'header' dictionary object from the ISS data provided by ISS data.
 - /metadata: Returns the 'metadata' dictionary object from the ISS data provided by ISS data.
-- /epochs: Return entire data set
-- /epochs?limit=int&offset=int: Return modified Epoch list using query parameters. Ensure the URL is in single or double quotes when you use multiple parameters.
-- /epochs/&lt;epoch&gt;: Return state vectors for a specific Epoch specified by a timestamp
+- /epochs: Return entire data set.
+- /epochs?limit=int&offset=int: Return modified Epoch list using query parameters. Limit sets the amount of Epochs outputted, and offset determines the data offset used when outputting the data. Ensure the URL is in single or double quotes when you use multiple parameters.
+- /epochs/&lt;epoch&gt;: Return state vectors for a specific Epoch specified by a timestamp.
 - /epochs/&lt;epoch&gt;/speed: Return instantaneous speed for a specific Epoch
 - /epochs/&lt;epoch&gt;/location: Return latitude, longitude, altitude, and geoposition for a specific Epoch specified by a timestamp.
 - /now: Return state vectors, instantaneous speed, latitude, longitude, altitude, and geoposition for the Epoch nearest in time.
@@ -55,9 +56,34 @@ Ensure that you are either in the correct directory or that you specify the dire
 
 - The output of the comment, header, and metadata routes are in their original format, with the header listing creation date and data originator, metadata listing information regarding the ISS and the reference frame used, and comment providing additional info regaridng the ISS and it's trajectory.
 - The epochs route output depends on the primary script depends on the given command, but excluding the location and speed route, they output a timestamp in UTC, position values (x,y,z) in km, velocity values (x_dot, y_dot, z_dot) in km/s. The specific data or number of data values vary depending on the command and query parameters used.
-- the speed route returns instantenous speed in km/s
-- location provides altitude in km as well as latitude and longitude of the ISS relative to its position above Earth's surface. Additionally, it provides geopositional data based on wherever it is flying over at the specified timestamp that may include country name, city information, county information, etc depending on the location. If it is over the ocean, no location will be specified.
-- the now route provides data (instantaneous speed, latitude, longitude, altitude, and geoposition) based on the Epoch nearest in time (UTC). The ISS data is provided in four minute increments, so minor differences are likely.
+
+- Example:
+    ```bash
+    [user-vm]/ISS-Tracker$ curl 'localhost:5000/epochs?limit=1&offset=300'
+    Epochs:
+    Timestamp: 2024-076T08:00:00.000Z
+        Position (km):
+            x = -2423.94077559042
+            y = 3672.51972810988
+            z = 5173.27450843721
+        Velocity (km/s):
+            x_dot = -5.16918942964134
+            y_dot = -5.46405096106404
+            z_dot = 1.45802178499464
+    [user-vm]/ISS-Tracker$ curl localhost:5000/epochs/2024-076T08:00:00.000Z
+    State Vector:
+    Timestamp: 2024-076T08:00:00.000Z
+        Position (km):
+            x = -2423.94077559042
+            y = 3672.51972810988
+            z = 5173.27450843721
+        Velocity (km/s):
+            x_dot = -5.16918942964134
+            y_dot = -5.46405096106404
+            z_dot = 1.45802178499464
+- The speed route returns instantenous speed in km/s
+- Location provides altitude in km as well as latitude and longitude of the ISS relative to its position above Earth's surface. Additionally, it provides geopositional data based on wherever it is flying over at the specified timestamp that may include country name, city information, county information, etc depending on the location. If it is over the ocean, no location will be specified.
+- The now route provides data (instantaneous speed, latitude, longitude, altitude, and geoposition) based on the Epoch nearest in time (UTC). The ISS data is provided in four minute increments, so minor differences are likely.
 
 - Example:
    ```bash
@@ -69,8 +95,7 @@ Ensure that you are either in the correct directory or that you specify the dire
     Latitude = 49.112070566067544
     Longitude = 105.12869747883002
     Geolocation = {'county': 'Baruunburen', 'state': 'Selenge', 'ISO3166-2-lvl4': 'MN-049', 'country': 'Mongolia', 'country_code': 'mn'}
-
-
 ### References
 [1]: https://spotthestation.nasa.gov/trajectory_data.cfm
-1. NASA's Spot the Station [https://spotthestation.nasa.gov/trajectory_data.cfm]
+1. Keeter, B (Page Editor), & KEaton, J. (NASA Official). (2022, July 11). ISS Trajectory Data. Spot the STation. National Aeronautics and Space Administration.
+https://spotthestation.nasa.gov/trajectory_data.cfm
