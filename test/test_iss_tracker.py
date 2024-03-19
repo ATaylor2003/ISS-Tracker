@@ -1,19 +1,19 @@
 import pytest
 from datetime import datetime
 import pytz
-from iss_tracker import app
+from iss_tracker import app, fetch_iss_data, print_position_velocity_data
 
 @pytest.fixture
 def client():
     with app.test_client() as client:
         yield client
-"""
+
 def test_fetch_iss_data():
     iss_data = fetch_iss_data()
     assert isinstance(iss_data, list)
     assert len(iss_data) > 0
     assert all(isinstance(entry, dict) for entry in iss_data)
-"""
+
 def test_get_epochs(client):
     response = client.get('/epochs')
     assert response.status_code == 200
@@ -25,7 +25,7 @@ def test_get_state_vectors(client):
 def test_get_instantaneous_speed(client):
     response = client.get('/epochs/2024-055T18:32:00.000Z/speed')
     assert response.status_code == 200
-"""
+
 def test_print_position_velocity_data():
     # Define a sample state dictionary
     state = {
@@ -38,19 +38,19 @@ def test_print_position_velocity_data():
 
     # Define the expected output string
     expected_output = (
-        "Position:\n"
+        "Position (km):\n"
         "   x = 10\n"
         "   y = 20\n"
         "   z = 30\n"
-        "Velocity:\n"
-        "   vx = 5\n"
-        "   vy = -2\n"
-        "   vz = 8\n"
+        "Velocity (km/s):\n"
+        "   x_dot = 5\n"
+        "   y_dot = -2\n"
+        "   z_dot = 8\n"
     )
 
     # Assert that the output matches the expected output
     assert output == expected_output
-"""
+
 def test_get_location(client):
     now = datetime.now(pytz.utc)
     dt_i = datetime.strftime(now, '%Y-%jT%H:%M:%S.%fZ')
