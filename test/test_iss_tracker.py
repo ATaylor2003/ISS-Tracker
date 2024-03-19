@@ -30,7 +30,7 @@ def test_print_position_velocity_data():
     # Define a sample state dictionary
     state = {
         'position': {'x': 10, 'y': 20, 'z': 30},
-        'velocity': {'vx': 5, 'vy': -2, 'vz': 8}
+        'velocity': {'x_dot': 5, 'y_dot': -2, 'z_dot': 8}
     }
 
     # Call the function with the sample state dictionary
