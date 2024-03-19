@@ -1,4 +1,4 @@
-# ISS Tracker
+# International Space Station Epoch Tracker
 
 ## Overview
 The ISS Tracker project provides a flask app for retrieving, processing, and analyzing International Space Station (ISS) trajectory data and current location. The primary script, iss_tracker.py, fetches ISS data from [NASA's Spot The Station][1], processes it into a structured format, and outputs timestamps, state vectors, speed, and/or geolocation depending on the URL used. Additionally, the project includes a unit testing script, test_iss_tracker.py, for testing the functionality of each individual function in the primary script. This allows for one to easily gain access to Epoch data in certain timeframes and can aid with identifying the positional history of the space station along with its current position, which can help with performing station observation.
